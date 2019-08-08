@@ -45,7 +45,7 @@ if result == "N/A":
 	print("Sorry, this year is not on the calendar.")
 else:
 	year_url = "http://www.interfaith-calendar.org/" + result
-	print("Year found: " + year_url)
+	# print("Year found: " + year_url)
 
 
 ### COLLECT HOLIDAYS ###
@@ -60,20 +60,26 @@ month_regex = r"{}".format(current_month.lower())
 def find_month(months, month_to_find):
 	for month in months:
 		if re.search(month_to_find, str(month).lower()):
-			print("Found!")
 			return month
 	else:
 		return "N/A"
 
 current_month_h2 = find_month(h2s, month_regex)
-print("Type of current_month_h2 is:")
-print(type(current_month_h2))
 
-print(current_month_h2)
-print("Next element is...")
-print(current_month_h2.next_element)
+# WARNING:
+# Things get hacky ahead, because the HTML DOM structure is weird :/
+sib1 = current_month_h2.next_sibling
+sib2 = sib1.next_sibling
 
-print("Type of current_month_h2.next_element is:")
-print(type(current_month_h2.next_element))
+holiday_days = sib2.contents[:-1]
 
-all_holidays_this_month = ""
+for holiday_day in holiday_days:
+	# Every other one is blank, for some reason, so this line skips blanks:
+	if holiday_days.index(holiday_day) % 2 == 1:
+		day_number = holiday_day.contents[0]
+		print("Day number: " + str(day_number))
+		holidays_today = holiday_day.contents[1]
+		print("Holidays today: " + str(holidays_today))
+
+
+#################################################
