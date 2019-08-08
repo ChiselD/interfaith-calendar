@@ -70,14 +70,16 @@ current_month_h2 = find_month(h2s, month_regex)
 # Things get hacky ahead, because the HTML DOM structure is weird :/
 sib1 = current_month_h2.next_sibling
 sib2 = sib1.next_sibling
-
 holiday_days = sib2.contents[:-1]
 
 for holiday_day in holiday_days:
 	# Every other one is blank, for some reason, so this line skips blanks:
 	if holiday_days.index(holiday_day) % 2 == 1:
-		day_number = holiday_day.contents[0]
+		day_number = holiday_day.contents[0].strip()
 		print("Day number: " + str(day_number))
+		# Check if day_number is a single day or multiple days
+		if str(day_number).isdigit() == False:
+			print("Multiple days!")
 		holidays_today = holiday_day.contents[1]
 		print("Holidays today: " + str(holidays_today))
 
