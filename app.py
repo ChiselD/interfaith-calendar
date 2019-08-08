@@ -10,7 +10,8 @@ import re
 today = date.today()
 current_year = today.strftime("%Y")
 current_month = today.strftime("%B")
-current_day = today.strftime("%d").lstrip("0")
+# current_day = today.strftime("%d").lstrip("0")
+current_day = "10"
 
 print(f"Today is {current_month} {current_day}, {current_year}.")
 
@@ -73,15 +74,24 @@ sib2 = sib1.next_sibling
 holiday_days = sib2.contents[:-1]
 
 for holiday_day in holiday_days:
-	# Every other one is blank, for some reason, so this line skips blanks:
+	# Alternating items are blank, for some reason, so this line skips blanks:
 	if holiday_days.index(holiday_day) % 2 == 1:
 		day_number = holiday_day.contents[0].strip()
 		print("Day number: " + str(day_number))
+		if current_day == day_number:
+			print("There's a holiday today!")
 		# Check if day_number is a single day or multiple days
 		if str(day_number).isdigit() == False:
 			print("Multiple days!")
-		holidays_today = holiday_day.contents[1]
-		print("Holidays today: " + str(holidays_today))
+		holidays_today_raw = holiday_day.contents[1] # type: bs4.element.Tag
+
+		holidays_today = []
+		for item in holidays_today_raw.contents:
+			if item != "\n":
+				holidays_today.append(item.get_text().strip())
+		print("RESULTS:")
+		for holiday in holidays_today:
+			print(holiday)
 
 
 #################################################
