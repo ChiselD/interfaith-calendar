@@ -2,6 +2,10 @@
 # Created by https://www.gitignore.io/api/macos,python,sublimetext
 # Edit at https://www.gitignore.io/?templates=macos,python,sublimetext
 
+# My testing files
+pseudocode.txt
+second_try.py
+
 ### macOS ###
 # General
 .DS_Store
