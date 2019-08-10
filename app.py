@@ -1,7 +1,19 @@
+import re
 import requests
+import unicodedata
 from bs4 import BeautifulSoup
 from datetime import date
-import re
+
+# OUTSTANDING ISSUES:
+# September, all dates (due to layout of source page: placing of "Equinox")
+# October 20 (text encoding issue?)
+# February, all dates (IndexError: list index out of range)
+# March, all dates (due to layout of source page: placing of "Equinox")
+# May, all dates (getting "No holiday today" message)
+# - for May: probably deleted wrong alternates when deleting blanks
+# June, all dates (due to layout of source page: placing of "Solstice")
+# November 28 (getting "No holiday today" message)
+# December, various (getting only Advent messages)
 
 ### GO TO CURRENT YEAR PAGE ###
 
@@ -10,8 +22,9 @@ import re
 today = date.today()
 current_year = today.strftime("%Y")
 current_month = today.strftime("%B")
-# current_day = today.strftime("%d").lstrip("0")
-current_day = "10"
+# current_month = "December"
+current_day = today.strftime("%d").lstrip("0")
+# current_day = "25"
 
 print(f"Today is {current_month} {current_day}, {current_year}.")
 
@@ -69,74 +82,67 @@ current_month_h2 = find_month(h2s, month_regex)
 
 # WARNING:
 # Things get hacky ahead, because the HTML DOM structure is weird :/
-# First we string together next_sibling methods to get to the sibling we want
+# First we string together next_sibling methods to get the sibling we want
 # Then we strip the last item, "Definitions", which we don't want
 holiday_data = current_month_h2.next_sibling.next_sibling.contents[:-1]
 
 # Function to break down multi-day info and append all those days to a list
-def append_multiple_days(arr, data):
+def multiday_list(data):
 	range_list = data.split("-")
+	multiday = []
 	for n in range(int(range_list[0]), int(range_list[1])+1):
-		arr.append(str(n))
+		multiday.append(str(n))
+	return multiday
 
 # Put all holiday days this month in a list
-holiday_days_this_month_with_duplicates = []
+holiday_days_this_month = []
+
 # Each holiday_data_item contains 1. date, 2. holidays (w/ HTML), and optionally 3. blankness
 for holiday_data_item in holiday_data:
-	if holiday_data.index(holiday_data_item) % 2 == 1: # Alternating items are blank, for some reason, so this line skips blanks
+	if holiday_data.index(holiday_data_item) % 2 == 1: # Alternating items are blank, for some reason, so this line skips them
 
-		print("Length of holiday_data_item after removing blanks: ")
-		print(len(holiday_data_item))
-		print("All remaining contents of holiday_data_item after removing blanks:")
-		for content in holiday_data_item.contents:
-			print("Content: ")
-			print(content)
+		current_holidays = [[], []]
 
-		holidays_today = []
-
-		# Get day and append it to holidays_today
-		day_number = holiday_data_item.contents[0].strip()
+		# Get day and append it to current_holiday
+		day_number = str(holiday_data_item.contents[0].strip())
 		if day_number.isdigit():
-			holiday_days_this_month_with_duplicates.append(day_number)
+			current_holidays[0].append(day_number)
 		else:
 			multiday = True
-			append_multiple_days(holiday_days_this_month_with_duplicates, day_number)
+			current_holidays[0] = multiday_list(day_number)
 
-		# Get holiday info and append it to holidays_today
-		holidays_today.append(holiday_data_item.contents[1].get_text().strip()) # type: bs4.element.Tag
+		# Get holidays on this day
+		todays_holidays = str(holiday_data_item.contents[1]).split("\n")
 
-# Remove duplicate day values while preserving order
-holiday_days_this_month = list(dict.fromkeys(holiday_days_this_month_with_duplicates))
-print("All holiday days this month:")
-print(holiday_days_this_month)
+		for item in todays_holidays:
+			if item != "<ul>" and item != "</ul>":
+				text_to_append = unicodedata.normalize("NFKD", BeautifulSoup(item, "html.parser").get_text().strip())
+				current_holidays[1].append(text_to_append)
 
-# Function to list all the holidays that occur on a certain day
-# def list_todays_holidays(day):
-# 	pass
+		holiday_days_this_month.append(current_holidays)
 
-# Check if there is a holiday today
-if current_day in holiday_days_this_month:
-	print("There's a holiday today!")
-	# list_todays_holidays(current_day)
-else:
-	print("There are no major holidays today.")
+		# print("holiday_days_this_month is now:")
+		# print(holiday_days_this_month)
 
 
-holidays_today = [] # All plaintext holidays occurring today will go in this list
-for html_item in holidays_today_raw.contents:
-	if html_item != "\n":
-		holidays_today.append(html_item.get_text().strip())
-print("RESULTS:")
-for holiday in holidays_today:
-	print(holiday)
-print("\n")
+### CHECK IF TODAY IS A HOLIDAY ###
 
-def report_todays_holidays(holidays):
-	print(f"Today is {current_month} {current_day}, {current_year}.")
-	for holiday in holidays:
-		print("Today is: " + holiday)
+is_today_a_holiday = False
+success_message_printed = False
 
-report_todays_holidays(holidays_today)
+for day in holiday_days_this_month:
+	if current_day in day[0]:
+		is_today_a_holiday = True
+		if success_message_printed == False:
+			print("Today is a holiday!")
+			success_message_printed = True
+		for holiday in day[1]:
+			print(holiday)
+		if len(day[0]) > 1:
+			print(f"(The holiday above lasts from {current_month} {day[0][0]} to {current_month} {day[0][-1]}.)")
+
+if is_today_a_holiday == False:
+	print("I know of no major holidays on this date.")
 
 
 #################################################
