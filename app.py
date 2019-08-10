@@ -69,8 +69,9 @@ current_month_h2 = find_month(h2s, month_regex)
 
 # WARNING:
 # Things get hacky ahead, because the HTML DOM structure is weird :/
-holiday_data_plus_definitions = current_month_h2.next_sibling.next_sibling
-holiday_data = holiday_data_plus_definitions.contents[:-1] # Here we strip the last item, "Definitions", which we don't want
+# First we string together next_sibling methods to get to the sibling we want
+# Then we strip the last item, "Definitions", which we don't want
+holiday_data = current_month_h2.next_sibling.next_sibling.contents[:-1]
 
 # Function to break down multi-day info and append all those days to a list
 def append_multiple_days(arr, data):
