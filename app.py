@@ -5,15 +5,18 @@ from bs4 import BeautifulSoup
 from datetime import date
 
 # OUTSTANDING ISSUES:
-# September, all dates (due to layout of source page: placing of "Equinox")
-# October 20 (text encoding issue?)
+# all dates (weirdly slow)
+# September, all dates (source page layout: presence of word "October" in date field)
+# October 20 (text encoding issue)
 # February, all dates (IndexError: list index out of range)
-# March, all dates (due to layout of source page: placing of "Equinox")
+# March, various (missing Nineteen Day Fast)
+# March 21 (text encoding issue)
 # May, all dates (getting "No holiday today" message)
 # - for May: probably deleted wrong alternates when deleting blanks
-# June, all dates (due to layout of source page: placing of "Solstice")
+# June 5-7 (missing multiday holidays)
 # November 28 (getting "No holiday today" message)
-# December, various (getting only Advent messages)
+# December, various (not getting any holiday messages)
+# - for December: probably deleted wrong alternates when deleting blanks
 
 ### GO TO CURRENT YEAR PAGE ###
 
@@ -21,10 +24,10 @@ from datetime import date
 
 today = date.today()
 current_year = today.strftime("%Y")
-current_month = today.strftime("%B")
-# current_month = "December"
-current_day = today.strftime("%d").lstrip("0")
-# current_day = "25"
+# current_month = today.strftime("%B")
+current_month = "June"
+# current_day = today.strftime("%d").lstrip("0")
+current_day = "21"
 
 print(f"Today is {current_month} {current_day}, {current_year}.")
 
@@ -86,12 +89,16 @@ current_month_h2 = find_month(h2s, month_regex)
 # Then we strip the last item, "Definitions", which we don't want
 holiday_data = current_month_h2.next_sibling.next_sibling.contents[:-1]
 
+# Function to remove all non-numeric chars from date strings (e.g. in equinoxes/solstices)
+def clean_date(problem_date):
+	return "".join(c for c in problem_date if c.isdigit())
+
 # Function to break down multi-day info and append all those days to a list
 def multiday_list(data):
 	range_list = data.split("-")
 	multiday = []
 	for n in range(int(range_list[0]), int(range_list[1])+1):
-		multiday.append(str(n))
+		multiday.append(str(n).split())
 	return multiday
 
 # Put all holiday days this month in a list
@@ -101,12 +108,21 @@ holiday_days_this_month = []
 for holiday_data_item in holiday_data:
 	if holiday_data.index(holiday_data_item) % 2 == 1: # Alternating items are blank, for some reason, so this line skips them
 
-		current_holidays = [[], []]
+		# [0] holds day number, [1] holds holidays, [2] holds equinox/solstice info
+		current_holidays = [[], [], []]
 
 		# Get day and append it to current_holiday
 		day_number = str(holiday_data_item.contents[0].strip())
 		if day_number.isdigit():
 			current_holidays[0].append(day_number)
+		# Check for equinox/solstice
+		elif "Solstice" in day_number:
+			current_holidays[0].append(clean_date(day_number))
+			current_holidays[2].append("Solstice")
+		elif "Equinox" in day_number:
+			current_holidays[0].append(clean_date(day_number))
+			current_holidays[2].append("Equinox")
+		# Check for multiday holidays
 		else:
 			multiday = True
 			current_holidays[0] = multiday_list(day_number)
@@ -121,9 +137,6 @@ for holiday_data_item in holiday_data:
 
 		holiday_days_this_month.append(current_holidays)
 
-		# print("holiday_days_this_month is now:")
-		# print(holiday_days_this_month)
-
 
 ### CHECK IF TODAY IS A HOLIDAY ###
 
@@ -133,6 +146,8 @@ success_message_printed = False
 for day in holiday_days_this_month:
 	if current_day in day[0]:
 		is_today_a_holiday = True
+		if day[2]:
+			print(f"Today is the {day[2][0]}.")
 		if success_message_printed == False:
 			print("Today is a holiday!")
 			success_message_printed = True
