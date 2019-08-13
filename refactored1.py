@@ -36,6 +36,17 @@ def sanitize_input(date_as_tuple):
 
 	return (sanitized_year, sanitized_month, sanitized_day)
 
+def get_correct_url_format(page_name, urls):
+	option_1 = str(page_name) + ".htm"
+	option_2 = str(page_name) + ".html"
+
+	if option_1 in urls:
+		return option_1
+	elif option_2 in urls:
+		return option_2
+	else:
+		return "N/A"
+
 def get_year_page(year):
 	soup = BeautifulSoup(requests.get("http://www.interfaith-calendar.org/index.htm").text, "html.parser")
 	links = soup.findAll("a")
@@ -43,18 +54,11 @@ def get_year_page(year):
 	for link in links:
 		hrefs.append(link.get("href"))
 
-	# Get possible link format to year page
-	year_option_1 = str(year) + ".htm"
-	year_option_2 = str(year) + ".html"
-
-	# Get link directly to current year page
-	result = ""
-	if year_option_1 in hrefs:
-		result = year_option_1
-	elif year_option_2 in hrefs:
-		result = year_option_2
-
-	return "http://www.interfaith-calendar.org/" + result
+	found_page = get_correct_url_format(year, hrefs)
+	if found_page == "N/A":
+		print("Sorry, this year is not on the calendar.")
+	else:
+		return "http://www.interfaith-calendar.org/" + found_page
 
 def get_month_data(year_url, month):
 	soup = BeautifulSoup(requests.get(year_url).text, "html.parser")
