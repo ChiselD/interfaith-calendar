@@ -60,23 +60,28 @@ def get_year_page(year):
 	else:
 		return "http://www.interfaith-calendar.org/" + found_page
 
+def find_month(months, month_to_find):
+	for month in months:
+		if re.search(month_to_find, str(month).lower()):
+			return month
+	else:
+		return "N/A"
+
 def get_month_data(year_url, month):
 	soup = BeautifulSoup(requests.get(year_url).text, "html.parser")
 	h2s = soup.findAll("h2")
 	month_regex = r"{}".format(month.lower())
 
-	for month in h2s:
-		if re.search(month_regex, str(month).lower()):
-			found_month_h2 = month
-			break
-	else:
-		found_month_h2 = "N/A"
+	found_month_h2 = find_month(h2s, month_regex)
 
 	# WARNING:
 	# Things get hacky ahead, because the HTML DOM structure is weird :/
 	# First we string together next_sibling methods to get the sibling we want
 	# Then we strip the last item, "Definitions", which we don't want
-	return found_month_h2.next_sibling.next_sibling.contents[:-1]
+	if found_month_h2 == "N/A":
+		print("Sorry, this month was not found.")
+	else:
+		return found_month_h2.next_sibling.next_sibling.contents[:-1]
 
 def clean_month_data(month_data):
 	pass
