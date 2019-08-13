@@ -56,8 +56,23 @@ def get_year_page(year):
 
 	return "http://www.interfaith-calendar.org/" + result
 
-def get_month_data(month):
-	pass
+def get_month_data(year_url, month):
+	soup = BeautifulSoup(requests.get(year_url).text, "html.parser")
+	h2s = soup.findAll("h2")
+	month_regex = r"{}".format(month.lower())
+
+	for month in h2s:
+		if re.search(month_regex, str(month).lower()):
+			found_month_h2 = month
+			break
+	else:
+		found_month_h2 = "N/A"
+
+	# WARNING:
+	# Things get hacky ahead, because the HTML DOM structure is weird :/
+	# First we string together next_sibling methods to get the sibling we want
+	# Then we strip the last item, "Definitions", which we don't want
+	return found_month_h2.next_sibling.next_sibling.contents[:-1]
 
 def clean_month_data(month_data):
 	pass
@@ -69,15 +84,18 @@ def check_calendar(year=get_current_date()['year'], month=get_current_date()['mo
 	year, month, day = sanitize_input((year, month, day))
 	print(f"Today is {month} {day}, {year}.")
 
-	year_page = get_year_page(year)
-	print("year_page successfully found:")
-	print(year_page)
+	year_url = get_year_page(year)
+	print("year_url successfully found:")
+	print(year_url)
 
-	month_data = get_month_data(month)
+	month_data = get_month_data(year_url, month)
+	print("month_data successfully found:")
+	print(month_data)
+
 	cleaned_month_data = clean_month_data(month_data)
 	print(report_todays_holidays(cleaned_month_data))
 
-# check_calendar()
-check_calendar(2019,"december",31)
+check_calendar()
+# check_calendar(2019,"december",31)
 
 ###
