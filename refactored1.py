@@ -4,6 +4,11 @@ import unicodedata
 from bs4 import BeautifulSoup
 from datetime import date
 
+# NOTES:
+# February does not, and may never, work. Thank you, awful coder of this website >:0
+# November refuses to print anything past the 24th.
+# December refuses to print anything past the 12th.
+
 def get_current_date():
 	today = date.today()
 	return {
@@ -69,7 +74,7 @@ def find_month(months, month_to_find):
 
 def get_month_data(year_url, month):
 	soup = BeautifulSoup(requests.get(year_url).text, "html.parser")
-	h2s = soup.findAll("h2")
+	h2s = soup.findAll("h2")[1:]
 	month_regex = r"{}".format(month.lower())
 
 	found_month_h2 = find_month(h2s, month_regex)
@@ -83,8 +88,54 @@ def get_month_data(year_url, month):
 	else:
 		return found_month_h2.next_sibling.next_sibling.contents[:-1]
 
+def clean_date(problem_date):
+	return "".join(c for c in problem_date if c.isdigit())
+
+def multiday_list(data):
+	range_list = data.split("-")
+	multiday = []
+	for n in range(int(range_list[0]), int(range_list[1])+1):
+		multiday.append(str(n).split())
+	return multiday
+
+# The get_day_number function should always return a list, for consistency
+def get_day_number(day_data):
+
+	# day_number = str(day_data.contents[0].strip())
+	day_number = str(day_data.contents[0].strip())
+
+	if day_number.isdigit():
+		return [day_number]
+	
+	# Check for equinox/solstice
+	elif "Solstice" in day_number:
+		return [clean_date(day_number), "Solstice"]
+	elif "Equinox" in day_number:
+		return [clean_date(day_number), "Equinox"]
+
+	# One-off exception for Rosh Hashanah
+	elif "October" in day_number:
+		return [clean_date(day_number)[0:2], "Rosh Hashanah"]
+	
+	# Check for multiday holidays
+	else:
+		return multiday_list(day_number)
+
 def clean_month_data(month_data):
-	pass
+	# [0] holds day number, [1] holds holidays, [2] holds extra info
+	current_holidays = [[], [], []]	
+	for item in month_data:
+		# Ignore all blank entries
+		if str(type(item)) != "<class 'bs4.element.NavigableString'>":
+		# if str(item) != "\n": # Might be able to replace line above with this line; to test
+			day_number = get_day_number(item)
+			if len(day_number) > 1 and day_number[1][0].isalpha():
+				current_holidays[0] = day_number[0]
+				current_holidays[2] = day_number[1]
+			else:
+				current_holidays[0] = day_number
+		# print("current_holidays is now:")
+		# print(current_holidays)
 
 def report_todays_holidays(today):
 	pass
@@ -104,7 +155,7 @@ def check_calendar(year=get_current_date()['year'], month=get_current_date()['mo
 	cleaned_month_data = clean_month_data(month_data)
 	print(report_todays_holidays(cleaned_month_data))
 
-check_calendar()
-# check_calendar(2019,"december",31)
+# check_calendar()
+check_calendar(2019,"june",21)
 
 ###
