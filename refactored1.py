@@ -5,9 +5,12 @@ from bs4 import BeautifulSoup
 from datetime import date
 
 # NOTES:
-# February does not, and may never, work. Thank you, awful coder of this website >:0
+# Several months do not, and may never, work. Thank you, awful coder of this website >:0
+# February refuses to print anything past the 10th.
 # November refuses to print anything past the 24th.
 # December refuses to print anything past the 12th.
+# There's some messiness in check_calendar() and clean_month_data() about who calls what.
+# For some reason each holiday message is appearing twice?
 
 def get_current_date():
 	today = date.today()
@@ -99,15 +102,11 @@ def clean_date(problem_date):
 
 def multiday_list(data):
 	range_list = data.split("-")
-	multiday = []
-	for n in range(int(range_list[0]), int(range_list[1])+1):
-		multiday.append(str(n).split())
+	multiday = [str(n) for n in range(int(range_list[0]), int(range_list[1])+1)]
 	return multiday
 
 # The get_day_number function should always return a list, for consistency
 def get_day_number(day_data):
-
-	# day_number = str(day_data.contents[0].strip())
 	day_number = str(day_data.contents[0].strip())
 
 	if day_number.isdigit():
@@ -115,9 +114,9 @@ def get_day_number(day_data):
 	
 	# Check for equinox/solstice
 	elif "Solstice" in day_number:
-		return [clean_date(day_number), "Solstice"]
+		return [clean_date(day_number), "the Solstice"]
 	elif "Equinox" in day_number:
-		return [clean_date(day_number), "Equinox"]
+		return [clean_date(day_number), "the Equinox"]
 
 	# One-off exception for Rosh Hashanah
 	elif "October" in day_number:
@@ -127,41 +126,57 @@ def get_day_number(day_data):
 	else:
 		return multiday_list(day_number)
 
-def clean_month_data(month_data):
+def clean_month_data(month_data, today):
 	# [0] holds day number, [1] holds holidays, [2] holds extra info
 	current_holidays = [[], [], []]	
 	for item in month_data:
 		# Ignore all blank entries
 		if str(type(item)) != "<class 'bs4.element.NavigableString'>":
 		# if str(item) != "\n": # Might be able to replace line above with this line; to test
+
+			# Get each day number in order to check it against today's date
 			day_number = get_day_number(item)
 			if len(day_number) > 1 and day_number[1][0].isalpha():
 				current_holidays[0] = day_number[0]
-				current_holidays[2] = day_number[1]
+				current_holidays[2] = [day_number[1]]
 			else:
 				current_holidays[0] = day_number
+				current_holidays[2] = []
+
+			# Get holidays on this day
+			todays_holidays = str(item.contents[1]).split("\n")
+
+			current_holidays[1] = []
+			for item in todays_holidays:
+				if item != "<ul>" and item != "</ul>":
+					text_to_append = unicodedata.normalize("NFKD", BeautifulSoup(item, "html.parser").get_text().strip())
+					current_holidays[1].append(text_to_append)
+
 		# print("current_holidays is now:")
 		# print(current_holidays)
 
-def report_todays_holidays(today):
-	pass
+		if today in current_holidays[0]:
+			report_todays_holidays(today, current_holidays)
+
+def report_todays_holidays(today, holidays):
+	print("Today is a holiday!")
+	if holidays[2]:
+		print(f"Today is {holidays[2][0]}.")
+	for holiday in holidays[1]:
+		print(f"Today is {holiday}.")
 
 def check_calendar(year=get_current_date()['year'], month=get_current_date()['month'], day=get_current_date()['day']):
 	year, month, day = sanitize_input((year, month, day))
 	print(f"Today is {month} {day}, {year}.")
 
 	year_url = get_year_page(year)
-	print("year_url successfully found:")
-	print(year_url)
 
 	month_data = get_month_data(year_url, month)
-	print("month_data successfully found:")
-	print(month_data)
 
-	cleaned_month_data = clean_month_data(month_data)
-	print(report_todays_holidays(cleaned_month_data))
+	cleaned_month_data = clean_month_data(month_data, day)
+	# print(report_todays_holidays(cleaned_month_data))
 
 # check_calendar()
-check_calendar(2019,"june",21)
+check_calendar(2019,"june",6)
 
 ###
