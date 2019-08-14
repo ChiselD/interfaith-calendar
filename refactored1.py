@@ -17,29 +17,35 @@ def get_current_date():
 		"day": today.strftime("%d").lstrip("0")
 	}
 
-def sanitize_input(date_as_tuple):
-	sanitized_year = str(date_as_tuple[0])
-	if not sanitized_year.isdigit():
+def sanitize_year(year):
+	if not year.isdigit():
 		print("Error: non-digit characters in year. Using current year instead.")
-		sanitized_year = get_current_date()['year']
-	elif int(sanitized_year) < 2011 or int(sanitized_year) > 2030:
+		return get_current_date()['year']
+	elif int(year) < 2011 or int(year) > 2030:
 		print("Sorry, we don't have holiday info for that year. Using current year instead.")
-		sanitized_year = get_current_date()['year']
-	
-	sanitized_month = date_as_tuple[1].title()
-	if sanitized_month not in ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]:
-		print("Error: month not recognized. Using current month instead.")
-		sanitized_month = get_current_date()['month']
-	
-	sanitized_day = str(date_as_tuple[2])
-	if not sanitized_day.isdigit():
-		print("Error: non-digit characters in day. Using current day instead.")
-		sanitized_day = get_current_date()['day']
-	elif int(sanitized_day) < 1 or int(sanitized_day) > 31:
-		print("Error: incorrect day entered. Using current day instead.")
-		sanitized_day = get_current_date()['day']
+		return get_current_date()['year']
+	else:
+		return str(year)
 
-	return (sanitized_year, sanitized_month, sanitized_day)
+def sanitize_month(month):
+	if month.title() not in ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]:
+		print("Error: month not recognized. Using current month instead.")
+		return get_current_date()['month']
+	else:
+		return month.title()
+
+def sanitize_day(day):
+	if not day.isdigit():
+		print("Error: non-digit characters in day. Using current day instead.")
+		return get_current_date()['day']
+	elif int(day) < 1 or int(day) > 31:
+		print("Error: incorrect day entered. Using current day instead.")
+		return get_current_date()['day']
+	else:
+		return str(day)
+
+def sanitize_input(date_as_tuple):
+	return (sanitize_year(str(date_as_tuple[0])), sanitize_month(str(date_as_tuple[1])), sanitize_day(str(date_as_tuple[2])))
 
 def get_correct_url_format(page_name, urls):
 	option_1 = str(page_name) + ".htm"
