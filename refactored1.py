@@ -10,9 +10,10 @@ from datetime import date
 # November refuses to print anything past the 24th.
 # December refuses to print anything past the 12th.
 # There's some messiness in check_calendar() and clean_month_data() about who calls what.
-# For some reason each holiday message is appearing twice?
+# TO DO: Print "Looks like today is not a holiday" message on non-holidays.
 
 def get_current_date():
+	# print("Running get_current_date()...")
 	today = date.today()
 	return {
 		"year": today.strftime("%Y"),
@@ -21,6 +22,7 @@ def get_current_date():
 	}
 
 def sanitize_year(year):
+	# print("Running sanitize_year()...")
 	if not year.isdigit():
 		print("Error: non-digit characters in year. Using current year instead.")
 		return get_current_date()['year']
@@ -31,6 +33,7 @@ def sanitize_year(year):
 		return str(year)
 
 def sanitize_month(month):
+	# print("Running sanitize_month()...")
 	if month.title() not in ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]:
 		print("Error: month not recognized. Using current month instead.")
 		return get_current_date()['month']
@@ -38,6 +41,7 @@ def sanitize_month(month):
 		return month.title()
 
 def sanitize_day(day):
+	# print("Running sanitize_day()...")
 	if not day.isdigit():
 		print("Error: non-digit characters in day. Using current day instead.")
 		return get_current_date()['day']
@@ -48,9 +52,11 @@ def sanitize_day(day):
 		return str(day)
 
 def sanitize_input(date_as_tuple):
+	# print("Running sanitize_input()...")
 	return (sanitize_year(str(date_as_tuple[0])), sanitize_month(str(date_as_tuple[1])), sanitize_day(str(date_as_tuple[2])))
 
 def get_correct_url_format(page_name, urls):
+	# print("Running get_correct_url_format()...")
 	option_1 = str(page_name) + ".htm"
 	option_2 = str(page_name) + ".html"
 
@@ -62,6 +68,7 @@ def get_correct_url_format(page_name, urls):
 		return "N/A"
 
 def get_year_page(year):
+	# print("Running get_year_page()...")
 	soup = BeautifulSoup(requests.get("http://www.interfaith-calendar.org/index.htm").text, "html.parser")
 	links = soup.findAll("a")
 	hrefs = []
@@ -75,6 +82,7 @@ def get_year_page(year):
 		return "http://www.interfaith-calendar.org/" + found_page
 
 def find_month(months, month_to_find):
+	# print("Running find_month()...")
 	for month in months:
 		if re.search(month_to_find, str(month).lower()):
 			return month
@@ -82,6 +90,7 @@ def find_month(months, month_to_find):
 		return "N/A"
 
 def get_month_data(year_url, month):
+	# print("Running get_month_data()...")
 	soup = BeautifulSoup(requests.get(year_url).text, "html.parser")
 	h2s = soup.findAll("h2")[1:]
 	month_regex = r"{}".format(month.lower())
@@ -98,15 +107,18 @@ def get_month_data(year_url, month):
 		return found_month_h2.next_sibling.next_sibling.contents[:-1]
 
 def clean_date(problem_date):
+	# print("Running clean_date()...")
 	return "".join(c for c in problem_date if c.isdigit())
 
 def multiday_list(data):
+	# print("Running multiday_list()...")
 	range_list = data.split("-")
 	multiday = [str(n) for n in range(int(range_list[0]), int(range_list[1])+1)]
 	return multiday
 
 # The get_day_number function should always return a list, for consistency
 def get_day_number(day_data):
+	# print("Running get_day_number()...")
 	day_number = str(day_data.contents[0].strip())
 
 	if day_number.isdigit():
@@ -123,12 +135,15 @@ def get_day_number(day_data):
 		return [clean_date(day_number)[0:2], "Rosh Hashanah"]
 	
 	# Check for multiday holidays
-	else:
+	else: # maybe turn this into "elif '-' in day_number" for readability
 		return multiday_list(day_number)
 
 def clean_month_data(month_data, today):
+	# print("Running clean_month_data()...")
 	# [0] holds day number, [1] holds holidays, [2] holds extra info
 	current_holidays = [[], [], []]	
+	# print("month_data is:")
+	# print(month_data)
 	for item in month_data:
 		# Ignore all blank entries
 		if str(type(item)) != "<class 'bs4.element.NavigableString'>":
@@ -156,9 +171,13 @@ def clean_month_data(month_data, today):
 		# print(current_holidays)
 
 		if today in current_holidays[0]:
+			# print("current_holidays[0] is now:")
+			# print(current_holidays[0])
 			report_todays_holidays(today, current_holidays)
+			break
 
 def report_todays_holidays(today, holidays):
+	# print("Running report_todays_holidays()...")
 	print("Today is a holiday!")
 	if holidays[2]:
 		print(f"Today is {holidays[2][0]}.")
@@ -166,6 +185,7 @@ def report_todays_holidays(today, holidays):
 		print(f"Today is {holiday}.")
 
 def check_calendar(year=get_current_date()['year'], month=get_current_date()['month'], day=get_current_date()['day']):
+	# print("Running check_calendar()...")
 	year, month, day = sanitize_input((year, month, day))
 	print(f"Today is {month} {day}, {year}.")
 
@@ -177,6 +197,6 @@ def check_calendar(year=get_current_date()['year'], month=get_current_date()['mo
 	# print(report_todays_holidays(cleaned_month_data))
 
 # check_calendar()
-check_calendar(2019,"june",6)
+check_calendar(2019,"august",15)
 
 ###
