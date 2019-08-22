@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from datetime import date
 
 # NOTES:
-# Several months do not, and may never, work. Thank you, awful coder of this website >:0
+# Several months do not, and may never, work. Thank you, awful coder of this website >:O
 # February refuses to print anything past the 10th.
 # November refuses to print anything past the 24th.
 # December refuses to print anything past the 12th.
@@ -99,7 +99,7 @@ def get_month_data(year_url, month):
 
 	# WARNING:
 	# Things get hacky ahead, because the HTML DOM structure is weird :/
-	# First we string together next_sibling methods to get the sibling we want
+	# First we chain together next_sibling methods to get the sibling we want
 	# Then we strip the last item, "Definitions", which we don't want
 	if found_month_h2 == "N/A":
 		print("Sorry, this month was not found.")
@@ -135,7 +135,7 @@ def get_day_number(day_data):
 		return [clean_date(day_number)[0:2], "Rosh Hashanah"]
 	
 	# Check for multiday holidays
-	else: # maybe turn this into "elif '-' in day_number" for readability
+	else: # TO DO: maybe turn this into "elif '-' in day_number" for readability
 		return multiday_list(day_number)
 
 def clean_month_data(month_data, today):
@@ -147,7 +147,7 @@ def clean_month_data(month_data, today):
 	for item in month_data:
 		# Ignore all blank entries
 		if str(type(item)) != "<class 'bs4.element.NavigableString'>":
-		# if str(item) != "\n": # Might be able to replace line above with this line; to test
+		# if str(item) != "\n": # TO DO: might be able to replace line above with this line
 
 			# Get each day number in order to check it against today's date
 			day_number = get_day_number(item)
@@ -196,7 +196,8 @@ def check_calendar(year=get_current_date()['year'], month=get_current_date()['mo
 	cleaned_month_data = clean_month_data(month_data, day)
 	# print(report_todays_holidays(cleaned_month_data))
 
-# check_calendar()
-check_calendar(2019,"august",15)
+# If you run check_calendar() with no arguments, it will default to today's date
+check_calendar()
+# check_calendar(2019,"august",15)
 
 ###
