@@ -11,6 +11,8 @@ from datetime import date
 # December refuses to print anything past the 12th.
 # There's some messiness in check_calendar() and clean_month_data() about who calls what.
 # TO DO: Print "Looks like today is not a holiday" message on non-holidays.
+# TO DO: Make sure "Today is a holiday!" message prints only once per date
+# Each holiday gets printed twice for some reason???
 
 def get_current_date():
 	# print("Running get_current_date()...")
@@ -160,6 +162,7 @@ def clean_month_data(month_data, today):
 
 			# Get holidays on this day
 			todays_holidays = str(item.contents[1]).split("\n")
+			# print(todays_holidays)
 
 			current_holidays[1] = []
 			for item in todays_holidays:
@@ -167,10 +170,11 @@ def clean_month_data(month_data, today):
 					text_to_append = unicodedata.normalize("NFKD", BeautifulSoup(item, "html.parser").get_text().strip())
 					current_holidays[1].append(text_to_append)
 
-		# print("current_holidays is now:")
-		# print(current_holidays)
+		# print("'today' is: " + today)
+		# print("'current_holidays' is: " + str(current_holidays))
+		# print("'current_holidays[0]' is: " + str(current_holidays[0]))
 
-		if today in current_holidays[0]:
+		while today in current_holidays[0]:
 			# print("current_holidays[0] is now:")
 			# print(current_holidays[0])
 			report_todays_holidays(today, current_holidays)
@@ -197,7 +201,7 @@ def check_calendar(year=get_current_date()['year'], month=get_current_date()['mo
 	# print(report_todays_holidays(cleaned_month_data))
 
 # If you run check_calendar() with no arguments, it will default to today's date
-check_calendar()
-# check_calendar(2019,"august",15)
+# check_calendar()
+check_calendar(2019,"august",15)
 
 ###
