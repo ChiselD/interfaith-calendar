@@ -174,11 +174,12 @@ def clean_month_data(month_data, today):
 		# print("'current_holidays' is: " + str(current_holidays))
 		# print("'current_holidays[0]' is: " + str(current_holidays[0]))
 
-		while today in current_holidays[0]:
+		for holiday in current_holidays[0]:
 			# print("current_holidays[0] is now:")
 			# print(current_holidays[0])
-			report_todays_holidays(today, current_holidays)
-			break
+			if holiday == today and item != "\n":
+				report_todays_holidays(today, current_holidays)
+				break
 
 def report_todays_holidays(today, holidays):
 	# print("Running report_todays_holidays()...")
